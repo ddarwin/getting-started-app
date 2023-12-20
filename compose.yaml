@@ -1,0 +1,41 @@
+services:
+  app:
+    image: node:18-alpine
+    command: sh -c "yarn install && yarn run dev"
+    ports:
+      - 127.0.0.1:3000:3000
+    working_dir: /app
+    volumes:
+      - ./:/app
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_USER: root
+      MYSQL_PASSWORD: secret
+      MYSQL_DB: todos
+      FAILURE_FLAGS_ENABLED: true
+      GREMLIN_DEBUG: true
+
+  mysql:
+    image: mysql:8.0
+    volumes:
+      - todo-mysql-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: todos
+
+
+  gremlin-sidecar:
+    image: gremlin/failure-flags-sidecar:latest
+    volumes:
+      - todo-mysql-data:/var/lib/mysql
+    environment:
+      SERVICE_NAME: "skippy"
+      GREMLIN_TEAM_ID: 
+      GREMLIN_TEAM_CERTIFICATE: ""
+      GREMLIN_TEAM_PRIVATE_KEY: ""
+      GREMLIN_API_ENDPOINT_URL: "https://beta.gremlin.com/v1"
+      GREMLIN_SIDECAR_ENABLED: true
+    network_mode: "service:app"
+
+volumes:
+  todo-mysql-data:
